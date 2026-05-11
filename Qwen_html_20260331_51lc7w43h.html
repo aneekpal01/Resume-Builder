@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Media Generator Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f0f1a;
+            --bg-card: #1a1a2e;
+            --bg-input: #252542;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            --gradient-2: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .nav-tab {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-main);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Section Tabs */
+        .section-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Generator Cards */
+        .generator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .generator-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        /* Model Selection */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .model-card {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .model-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .model-card.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .model-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .model-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .model-version {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Button */
+        .btn-generate {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Preview Area */
+        .preview-area {
+            background: var(--bg-input);
+            border-radius: 12px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border);
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .preview-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .preview-content {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Gallery */
+        .gallery-section {
+            margin-top: 3rem;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .gallery-media {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .gallery-info {
+            padding: 1rem;
+        }
+
+        .gallery-model {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .gallery-prompt {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .gallery-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-action:hover {
+            background: var(--bg-input);
+            color: var(--text-main);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-area.has-file {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .file-info {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        /* Settings Panel */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-1);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-tabs {
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="ph ph-sparkle"></i>
+                AI Media Generator
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" onclick="switchSection('image')">
+                    <i class="ph ph-image"></i>
+                    <span>Image</span>
+                </button>
+                <button class="nav-tab" onclick="switchSection('video')">
+                    <i class="ph ph-video"></i>
+                    <span>Video</span>
+                </button>
+                <button class="nav-tab" onclick="switchSection('img2video')">
+                    <i class="ph ph-arrow-right"></i>
+                    <span>Image to Video</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Image Generation Section -->
+        <div id="image-section" class="section-container active">
+            <div class="generator-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="ph ph-magic-wand"></i>
+                            Image Generator
+                        </h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Model</label>
+                        <div class="model-grid">
+                            <div class="model-card selected" onclick="selectModel('image', 'nano-banana-2')">
+                                <div class="model-icon">🍌</div>
+                                <div class="model-name">Nano Banana</div>
+                                <div class="model-version">v2.0</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('image', 'stable-diffusion')">
+                                <div class="model-icon">🎨</div>
+                                <div class="model-name">Stable Diffusion</div>
+                                <div class="model-version">XL 1.0</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('image', 'midjourney')">
+                                <div class="model-icon">🚀</div>
+                                <div class="model-name">Midjourney</div>
+                                <div class="model-version">v6</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('image', 'dalle-3')">
+                                <div class="model-icon">🤖</div>
+                                <div class="model-name">DALL-E 3</div>
+                                <div class="model-version">Latest</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prompt</label>
+                        <textarea class="form-textarea" id="image-prompt" placeholder="Describe the image you want to create... e.g., 'A serene mountain landscape at sunset with vibrant orange and purple skies'"></textarea>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label class="form-label">Aspect Ratio</label>
+                            <select class="form-select" id="image-ratio">
+                                <option value="1:1">Square (1:1)</option>
+                                <option value="16:9">Landscape (16:9)</option>
+                                <option value="9:16">Portrait (9:16)</option>
+                                <option value="4:3">Standard (4:3)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quality</label>
+                            <select class="form-select" id="image-quality">
+                                <option value="standard">Standard</option>
+                                <option value="high">High</option>
+                                <option value="ultra">Ultra</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-generate" onclick="generateImage()">
+                        <i class="ph ph-sparkle"></i>
+                        Generate Image
+                    </button>
+
+                    <div class="progress-container" id="image-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="image-progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="image-progress-text">Generating... 0%</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="ph ph-eye"></i>
+                            Preview
+                        </h2>
+                    </div>
+                    <div class="preview-area" id="image-preview">
+                        <div class="preview-placeholder">
+                            <i class="ph ph-image"></i>
+                            <p>Your generated image will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Generation Section -->
+        <div id="video-section" class="section-container">
+            <div class="generator-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="ph ph-video-camera"></i>
+                            Video Generator
+                        </h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Model</label>
+                        <div class="model-grid">
+                            <div class="model-card selected" onclick="selectModel('video', 'runwayml')">
+                                <div class="model-icon">🎬</div>
+                                <div class="model-name">Runway ML</div>
+                                <div class="model-version">Gen-2</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('video', 'pika')">
+                                <div class="model-icon">⚡</div>
+                                <div class="model-name">Pika Labs</div>
+                                <div class="model-version">1.5</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('video', 'luma')">
+                                <div class="model-icon">💡</div>
+                                <div class="model-name">Luma Dream</div>
+                                <div class="model-version">Machine</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prompt</label>
+                        <textarea class="form-textarea" id="video-prompt" placeholder="Describe the video you want to create... e.g., 'A drone shot flying over a futuristic city at night with neon lights'"></textarea>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label class="form-label">Duration</label>
+                            <select class="form-select" id="video-duration">
+                                <option value="5">5 seconds</option>
+                                <option value="10">10 seconds</option>
+                                <option value="15">15 seconds</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Resolution</label>
+                            <select class="form-select" id="video-resolution">
+                                <option value="720p">720p HD</option>
+                                <option value="1080p">1080p Full HD</option>
+                                <option value="4k">4K Ultra HD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-generate" onclick="generateVideo()">
+                        <i class="ph ph-video-camera"></i>
+                        Generate Video
+                    </button>
+
+                    <div class="progress-container" id="video-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="video-progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="video-progress-text">Generating... 0%</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="ph ph-play-circle"></i>
+                            Preview
+                        </h2>
+                    </div>
+                    <div class="preview-area" id="video-preview">
+                        <div class="preview-placeholder">
+                            <i class="ph ph-video"></i>
+                            <p>Your generated video will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image to Video Section -->
+        <div id="img2video-section" class="section-container">
+            <div class="generator-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="ph ph-arrows-left-right"></i>
+                            Image to Video
+                        </h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Select Model</label>
+                        <div class="model-grid">
+                            <div class="model-card selected" onclick="selectModel('img2video', 'hailu')">
+                                <div class="model-icon">🌊</div>
+                                <div class="model-name">Hailu AI</div>
+                                <div class="model-version">v2.4</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('img2video', 'veo')">
+                                <div class="model-icon">🎥</div>
+                                <div class="model-name">Veo</div>
+                                <div class="model-version">v3.1</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('img2video', 'kling')">
+                                <div class="model-icon">🗡️</div>
+                                <div class="model-name">Kling AI</div>
+                                <div class="model-version">v1.5</div>
+                            </div>
+                            <div class="model-card" onclick="selectModel('img2video', 'runway')">
+                                <div class="model-icon">🎬</div>
+                                <div class="model-name">Runway ML</div>
+                                <div class="model-version">Gen-3</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload Image</label>
+                        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+                            <i class="ph ph-upload-simple upload-icon"></i>
+                            <p>Click to upload or drag and drop</p>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">PNG, JPG, WEBP up to 10MB</p>
+                            <input type="file" id="file-input" accept="image/*" style="display: none" onchange="handleFileUpload(event)">
+                        </div>
+                        <div class="file-info" id="file-info">
+                            <i class="ph ph-file-image"></i>
+                            <span id="file-name"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Motion Prompt (Optional)</label>
+                        <textarea class="form-textarea" id="motion-prompt" placeholder="Describe how you want the image to move... e.g., 'Camera slowly zooms in, clouds moving in the sky'"></textarea>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label class="form-label">Duration</label>
+                            <select class="form-select" id="i2v-duration">
+                                <option value="3">3 seconds</option>
+                                <option value="5">5 seconds</option>
+                                <option value="10">10 seconds</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Motion Strength</label>
+                            <select class="form-select" id="motion-strength">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-generate" onclick="generateImageToVideo()">
+                        <i class="ph ph-arrows-left-right"></i>
+                        Convert to Video
+                    </button>
+
+                    <div class="progress-container" id="i2v-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="i2v-progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="i2v-progress-text">Converting... 0%</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="ph ph-play-circle"></i>
+                            Preview
+                        </h2>
+                    </div>
+                    <div class="preview-area" id="i2v-preview">
+                        <div class="preview-placeholder">
+                            <i class="ph ph-video"></i>
+                            <p>Your generated video will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Section -->
+        <div class="gallery-section">
+            <div class="gallery-header">
+                <h2 style="font-size: 1.5rem;">Recent Creations</h2>
+                <button class="btn-action" style="width: auto;" onclick="clearGallery()">
+                    <i class="ph ph-trash"></i>
+                    Clear All
+                </button>
+            </div>
+            <div class="gallery-grid" id="gallery-grid">
+                <!-- Gallery items will be added here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="ph ph-check-circle" style="color: var(--success); font-size: 1.5rem;"></i>
+        <span id="toast-message">Success!</span>
+    </div>
+
+    <script>
+        // State Management
+        let selectedModels = {
+            image: 'nano-banana-2',
+            video: 'runwayml',
+            img2video: 'hailu'
+        };
+
+        let uploadedFile = null;
+        let gallery = JSON.parse(localStorage.getItem('aiMediaGallery')) || [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGallery();
+        });
+
+        // Section Switching
+        function switchSection(section) {
+            document.querySelectorAll('.section-container').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            document.getElementById(`${section}-section`).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Model Selection
+        function selectModel(type, model) {
+            selectedModels[type] = model;
+            
+            // Update UI
+            const container = event.currentTarget.parentElement;
+            container.querySelectorAll('.model-card').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            showToast(`Selected ${model} model`, 'success');
+        }
+
+        // File Upload Handler
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadedFile = file;
+                document.getElementById('file-name').textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                document.getElementById('file-info').classList.add('show');
+                document.getElementById('upload-area').classList.add('has-file');
+                showToast('Image uploaded successfully', 'success');
+            }
+        }
+
+        // Drag and Drop
+        const uploadArea = document.getElementById('upload-area');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'var(--border)';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border)';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                uploadedFile = file;
+                document.getElementById('file-name').textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                document.getElementById('file-info').classList.add('show');
+                document.getElementById('upload-area').classList.add('has-file');
+                showToast('Image uploaded successfully', 'success');
+            }
+        });
+
+        // Generate Image
+        function generateImage() {
+            const prompt = document.getElementById('image-prompt').value.trim();
+            if (!prompt) {
+                showToast('Please enter a prompt', 'error');
+                return;
+            }
+
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner"></i> Generating...';
+
+            const progressContainer = document.getElementById('image-progress');
+            const progressFill = document.getElementById('image-progress-fill');
+            const progressText = document.getElementById('image-progress-text');
+            
+            progressContainer.style.display = 'block';
+
+            // Simulate generation progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Show result
+                    const preview = document.getElementById('image-preview');
+                    preview.innerHTML = `
+                        <img src="https://picsum.photos/seed/${Date.now()}/800/600" class="preview-content" alt="Generated Image">
+                    `;
+
+                    // Add to gallery
+                    addToGallery('image', selectedModels.image, prompt, `https://picsum.photos/seed/${Date.now()}/800/600`);
+
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ph ph-sparkle"></i> Generate Image';
+                    progressContainer.style.display = 'none';
+                    showToast('Image generated successfully!', 'success');
+                }
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `Generating... ${Math.round(progress)}%`;
+            }, 500);
+        }
+
+        // Generate Video
+        function generateVideo() {
+            const prompt = document.getElementById('video-prompt').value.trim();
+            if (!prompt) {
+                showToast('Please enter a prompt', 'error');
+                return;
+            }
+
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner"></i> Generating...';
+
+            const progressContainer = document.getElementById('video-progress');
+            const progressFill = document.getElementById('video-progress-fill');
+            const progressText = document.getElementById('video-progress-text');
+            
+            progressContainer.style.display = 'block';
+
+            // Simulate generation (videos take longer)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 8;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Show result
+                    const preview = document.getElementById('video-preview');
+                    preview.innerHTML = `
+                        <video class="preview-content" controls>
+                            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+
+                    // Add to gallery
+                    addToGallery('video', selectedModels.video, prompt, 'https://www.w3schools.com/html/mov_bbb.mp4');
+
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ph ph-video-camera"></i> Generate Video';
+                    progressContainer.style.display = 'none';
+                    showToast('Video generated successfully!', 'success');
+                }
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `Generating... ${Math.round(progress)}%`;
+            }, 800);
+        }
+
+        // Generate Image to Video
+        function generateImageToVideo() {
+            if (!uploadedFile) {
+                showToast('Please upload an image first', 'error');
+                return;
+            }
+
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner"></i> Converting...';
+
+            const progressContainer = document.getElementById('i2v-progress');
+            const progressFill = document.getElementById('i2v-progress-fill');
+            const progressText = document.getElementById('i2v-progress-text');
+            
+            progressContainer.style.display = 'block';
+
+            // Simulate conversion
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Show result
+                    const preview = document.getElementById('i2v-preview');
+                    preview.innerHTML = `
+                        <video class="preview-content" controls>
+                            <source src="https://www.w3schools.com/html/movie.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+
+                    // Add to gallery
+                    addToGallery('img2video', selectedModels.img2video, 'Image to Video Conversion', 'https://www.w3schools.com/html/movie.mp4');
+
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ph ph-arrows-left-right"></i> Convert to Video';
+                    progressContainer.style.display = 'none';
+                    showToast('Video created successfully!', 'success');
+                }
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `Converting... ${Math.round(progress)}%`;
+            }, 600);
+        }
+
+        // Add to Gallery
+        function addToGallery(type, model, prompt, mediaUrl) {
+            const item = {
+                id: Date.now(),
+                type,
+                model,
+                prompt,
+                mediaUrl,
+                date: new Date().toLocaleDateString()
+            };
+            gallery.unshift(item);
+            localStorage.setItem('aiMediaGallery', JSON.stringify(gallery));
+            renderGallery();
+        }
+
+        // Render Gallery
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = '';
+
+            gallery.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                
+                const mediaElement = item.type === 'image' 
+                    ? `<img src="${item.mediaUrl}" class="gallery-media" alt="Generated">`
+                    : `<video src="${item.mediaUrl}" class="gallery-media" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>`;
+
+                div.innerHTML = `
+                    ${mediaElement}
+                    <div class="gallery-info">
+                        <div class="gallery-model">${item.model}</div>
+                        <div class="gallery-prompt">${item.prompt}</div>
+                        <div class="gallery-actions">
+                            <button class="btn-action" onclick="downloadMedia('${item.mediaUrl}')">
+                                <i class="ph ph-download-simple"></i>
+                                Download
+                            </button>
+                            <button class="btn-action" onclick="deleteFromGallery(${item.id})">
+                                <i class="ph ph-trash"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // Download Media
+        function downloadMedia(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-media-${Date.now()}.${url.includes('mp4') ? 'mp4' : 'jpg'}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Download started', 'success');
+        }
+
+        // Delete from Gallery
+        function deleteFromGallery(id) {
+            gallery = gallery.filter(item => item.id !== id);
+            localStorage.setItem('aiMediaGallery', JSON.stringify(gallery));
+            renderGallery();
+            showToast('Item deleted', 'success');
+        }
+
+        // Clear Gallery
+        function clearGallery() {
+            if (confirm('Are you sure you want to clear all items?')) {
+                gallery = [];
+                localStorage.setItem('aiMediaGallery', JSON.stringify(gallery));
+                renderGallery();
+                showToast('Gallery cleared', 'success');
+            }
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const icon = toast.querySelector('i');
+
+            toastMessage.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            if (type === 'success') {
+                icon.className = 'ph ph-check-circle';
+                icon.style.color = 'var(--success)';
+            } else {
+                icon.className = 'ph ph-warning-circle';
+                icon.style.color = 'var(--warning)';
+            }
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
